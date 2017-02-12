@@ -1,9 +1,5 @@
-import os, time, sys
+import sys,time
 from PIL import Image
-import time
-import random
-from datetime import datetime
-import kivy
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.stacklayout import StackLayout
@@ -14,31 +10,30 @@ from kivy.uix.camera import Camera
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
 import glob
 
-sys.path.append("/home/tgrecojr")
 
-
-
-
-
+############################################
+### GLOBALS ######
+############################################
 photoPath = "/Users/tgrecojr/Downloads/photos/"
-
-
 cam = Camera()        #Get the camera
 cam=Camera(resolution=(3280,2464),size_hint=(1, .8))
 sm = ScreenManager(transition=SlideTransition(),duration=10)
 carousel = Carousel(direction='right',loop='true',size_hint=(1, .8))
 
-# Callback function for photo button
-def photo_callback(obj):
-        #photoName = time.strftime("%Y%m%d%H%M%S") + "_photobooth.jpg"
-        #cam.texture.save("IMG_" + photoName, flipped=False)
+
+#############################################
+def goto_take_photo_button_press(obj):
+        photoName = time.strftime("%Y%m%d%H%M%S") + "_photobooth.jpg"
+        #Message countdown here.... (or figure some way to do an onload event)
+        #cam.texture.save(photoPath + "IMG_" + photoName, flipped=False)
         sm.current = 'MessageScreen'
         Clock.schedule_once(change_screen,3)
 
 def change_screen(obj):
     sm.current = 'PhotoScreen'
 
-def gallery_callback(obj):
+def goto_gallery_button_press(obj):
+    cam.play=False
     pathname = photoPath + '*.jpg'
     for name in glob.glob(pathname):
         theimage = Image(source=name)
@@ -46,55 +41,51 @@ def gallery_callback(obj):
     sm.current = 'GalleryScreen'
 
 def gallery_back_callback(obj):
+    cam.play=True
     sm.current = 'PhotoScreen'
 
 class MyApp(App):
 
-
-
-        #photo = kivyImage(source="/Users/tgrecojr/Downloads/thumbnail.jpg",size_hint=(.2, 1))
         cam.play = True  # Start the camera
-        #cam.size_hint(.8,1)
         def build(self):
 
+                # build the screens
                 photoscreen = Screen(name='PhotoScreen')
-                sm.add_widget(photoscreen)
                 messagescreen = Screen(name='MessageScreen')
-                sm.add_widget(messagescreen)
                 galleryscreen = Screen(name='GalleryScreen')
-                sm.add_widget(galleryscreen)
 
-                # Set up the layout
-                photobox = StackLayout(padding=0,spacing=0)
+                #Build the layout for the preview screen
+                previewscreenlayout = StackLayout(padding=0,spacing=0)
+                gotoGalleryButton = Button(text="Photo Gallery", size_hint=(.5, .2))
+                gotoGalleryButton.bind(on_press=goto_gallery_button_press)
+                gotoTakePhotoButton = Button(text="Take Photos", size_hint=(.5, .2))
+                gotoTakePhotoButton.bind(on_press=goto_take_photo_button_press)
+                previewscreenlayout.add_widget(gotoGalleryButton)
+                previewscreenlayout.add_widget(gotoTakePhotoButton)
+                previewscreenlayout.add_widget(cam)
 
-                # Create the UI objects (and bind them to callbacks, if necessary)
-                galleryButton = Button(text="Photo Gallery", size_hint=(.5, .2))
-                galleryButton.bind(on_press=gallery_callback)
-                photoButton = Button(text="Take Photos",size_hint=(.5, .2)) # Button: 20% width, 100% height
-                photoButton.bind(on_press=photo_callback) # when pressed, trigger the photo_callback function
-
-                gallerybox = StackLayout(padding=0,spacing=0)
+                # build the layout for the gallery screen
+                galleryscreenlayout = StackLayout(padding=0, spacing=0)
                 gallerybackbutton = Button(text="Back to Take Pictures", size_hint=(1, .2))
                 gallerybackbutton.bind(on_press=gallery_back_callback)
-                gallerybox.add_widget(gallerybackbutton)
-                gallerybox.add_widget(carousel)
-                galleryscreen.add_widget(gallerybox)
+                galleryscreenlayout.add_widget(gallerybackbutton)
+                galleryscreenlayout.add_widget(carousel)
 
-                # Add the UI elements to the layout
-                photobox.add_widget(galleryButton)
-                photobox.add_widget(photoButton)
-                #photobox.add_widget(self.photo)
-                photobox.add_widget(cam)
-                
+                # build the layout for the message screen
+                messagescreenlayout = StackLayout(padding=0, spacing=0)
 
-                photoscreen.add_widget(photobox)
+                # ADD layouts TO Screens
+                photoscreen.add_widget(previewscreenlayout)
+                galleryscreen.add_widget(galleryscreenlayout)
+                messagescreen.add_widget(messagescreenlayout)
+
+                # Add screens to screen manager
+                sm.add_widget(photoscreen)
+                sm.add_widget(messagescreen)
+                sm.add_widget(galleryscreen)
 
                 return sm
-                
-                
-        # Callback for thumbnail refresh
-        #def callback(self, instance):
-        #        self.photo.reload()
+
 
 
 if __name__ == '__main__':
