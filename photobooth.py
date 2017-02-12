@@ -3,11 +3,13 @@ from PIL import Image
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.stacklayout import StackLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.image import Image
 from kivy.uix.carousel import Carousel
 from kivy.clock import Clock
 from kivy.uix.camera import Camera
 from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition
+from kivy.uix.label import Label,CoreLabel
 import glob
 
 
@@ -19,7 +21,7 @@ cam = Camera()        #Get the camera
 cam=Camera(resolution=(3280,2464),size_hint=(1, .8))
 sm = ScreenManager(transition=SlideTransition(),duration=10)
 carousel = Carousel(direction='right',loop='true',size_hint=(1, .8))
-
+countdownMessage = Label(size_hint=(1, 1))
 
 #############################################
 def goto_take_photo_button_press(obj):
@@ -27,10 +29,16 @@ def goto_take_photo_button_press(obj):
         #Message countdown here.... (or figure some way to do an onload event)
         #cam.texture.save(photoPath + "IMG_" + photoName, flipped=False)
         sm.current = 'MessageScreen'
-        Clock.schedule_once(change_screen,3)
+        Clock.schedule_once(change_screen, 10)
+
+def do_nothing(obj):
+    print "doing nothing"
 
 def change_screen(obj):
     sm.current = 'PhotoScreen'
+
+def countdown_pressed(instance, value):
+    print('User clicked on', value)
 
 def goto_gallery_button_press(obj):
     cam.play=False
@@ -72,7 +80,16 @@ class MyApp(App):
                 galleryscreenlayout.add_widget(carousel)
 
                 # build the layout for the message screen
-                messagescreenlayout = StackLayout(padding=0, spacing=0)
+                #messagescreenlayout = StackLayout(padding=0, spacing=0)
+                messagescreenlayout = FloatLayout(padding=0, spacing=0);
+                countdownMessage.bind(on_ref_press=countdown_pressed)
+                countdownMessage.text = 'The PhotoBooth will take 4 photos, with a 3 second delay in between.  Get ready.......'
+                countdownMessage.text_size =  500,500
+                countdownMessage.font_size= 40
+                countdownMessage.valign = 'middle'
+                countdownMessage.halign = 'center'
+                messagescreenlayout.add_widget(countdownMessage)
+
 
                 # ADD layouts TO Screens
                 photoscreen.add_widget(previewscreenlayout)
